@@ -7,7 +7,7 @@ def timeBetween(t1, t2):
     t2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S")
     timeInSeconds = abs(int((t1-t2).total_seconds()))
     return str(timedelta(seconds = timeInSeconds))
-    
+    #eventually convert this from days/hours/minutes/seconds to months/weeks/days/hours/minutes/seconds
 
 def resetClock(issue, time):
     if time == "":
