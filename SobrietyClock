@@ -16,28 +16,6 @@ def resetClock(issue, time):
     file.write(time)
     print(f"Wrote {time} for clock {issue}.")
 
-def loadClocks():
-    clocks = []
-    def initList():
-        if os.path.exists("assets/clocks/list"):
-            file = open("assets/clocks/list", "r")
-        else:
-            file = open("assets/clocks/list", "x")
-            initList()
-    initList()
-    file = open("assets/clocks/list", "r")
-    for line in file:
-        if line != "\n":
-            clocks.append(line.strip("\n"))
-    file.close()
-
-    return clocks
-def loadClocks():
-    clocks = []
-    for clock in os.listdir("assets/clocks"):
-        clocks.append(clock)
-    return clocks
-
 def domore():
     rerun = input("Would you like to do anything else? (y/N) ")
     if rerun.lower() == "y":
