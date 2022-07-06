@@ -141,9 +141,10 @@ def start():
                     return
             except: 
                 print("That is not an option!")
-
-#domore()               
+              
 try:
+    if not os.path.exists("assets/clocks"):
+        os.makedirs("assets/clocks", exist_ok=True)
     start()
 except: 
     pass
