@@ -3,16 +3,27 @@ from datetime import datetime, timedelta
 import os, shutil, sys
 
 def timeBetween(t1, t2):
+
+    # Get the difference between the two dates in seconds.
     t1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S")
     t2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S")
     timeInSeconds = abs(int((t1-t2).total_seconds()))
+
+    # Convert the seconds to "{days} days, {hours}:{minutes}:{seconds}".
     timechange = str(timedelta(seconds = timeInSeconds))
+
+    # Convert the timestamp into "{years} years, {months} months, {weeks} weeks, {days} days, {hours}:{minutes}:{seconds}".
     days = int(timechange.split()[0])
-    weeks = divmod(days, 7)
-    months = divmod(days, 30)
-    print(timechange)
+    years = divmod(days, 365)
+    months = divmod(years[1], 30)
+    weeks = divmod(months[1], 7)
+    days = weeks[1]
     hms = timechange.split()[2]
-    timestamp = str(f"{months[0]} months, {weeks[0]} weeks, {days} days, {hms}")
+    timestamp = str(f"{years[0]} years, {months[0]} months, {weeks[0]} weeks, {days} days, {hms}")
+
+    # Make "0 {unit}" entries not appear.
+    for unit in ["years", "months", "weeks", "days"]:
+        timestamp = timestamp.replace(f"0 {unit}, ", "")
     return timestamp
     
 def resetClock(issue, time):
