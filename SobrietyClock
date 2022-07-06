@@ -6,9 +6,15 @@ def timeBetween(t1, t2):
     t1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S")
     t2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S")
     timeInSeconds = abs(int((t1-t2).total_seconds()))
-    return str(timedelta(seconds = timeInSeconds))
-    #eventually convert this from days/hours/minutes/seconds to months/weeks/days/hours/minutes/seconds
-
+    timechange = str(timedelta(seconds = timeInSeconds))
+    days = int(timechange.split()[0])
+    weeks = divmod(days, 7)
+    months = divmod(days, 30)
+    print(timechange)
+    hms = timechange.split()[2]
+    timestamp = str(f"{months[0]} months, {weeks[0]} weeks, {days} days, {hms}")
+    return timestamp
+    
 def resetClock(issue, time):
     if time == "":
         time=str(datetime.now()).split(".")[0]
@@ -33,14 +39,19 @@ def start():
         print("Invalid option. (not r/d/c)")
         start()
     clocks = os.listdir("assets/clocks")
+    clockNumbers = {}
+    print("Available clocks:")
+    n = 0
+    for clock in clocks:
+        n += 1
+        print(f"[{n}] {clock}")
+        clockNumbers[n] = clock
+        
+##########################
+# Resetting/Adding Clock #
+##########################
+
     if action == "r":
-        clockNumbers = {}
-        print("Available clocks:")
-        n = 0
-        for clock in clocks:
-            n += 1
-            print(f"[{n}] {clock}")
-            clockNumbers[n] = clock
         n += 1
         print(f"[{n}] New")
         clockNumbers[n] = "New"
@@ -75,38 +86,33 @@ def start():
                 print("That is not an option! Please make sure you choose a number.")
         if domore() == False:
             return
+
+#################
+# Viewing Clock #
+#################
+
     elif action == "c":        
-        clockNumbers = {}
-        print("Available clocks:")
-        n = 0
-        for clock in clocks:
-            n += 1
-            print(f"[{n}] {clock}")
-            clockNumbers[n] = clock
         while True:
             choice = input("Choose a clock: ")
-            try:
-                if int(choice) not in clockNumbers:
-                    print("That is not an option!")
-                else:
-                    file = open(f"assets/clocks/{clockNumbers[int(choice)]}", "r")
-                    lastReset = file.read()
-                    file.close()
-                    print(f"You last reset the clock {clockNumbers[int(choice)]} on {lastReset.split()[0]} at {lastReset.split()[1]}.")
-                    print(f"You have not reset the clock for {timeBetween(str(datetime.now()).split('.')[0], lastReset)}.")
-                    if domore() == False:
-                        return
-            except: 
+            #try:
+            if int(choice) not in clockNumbers:
+                print("That is not an option!")
+            else:
+                file = open(f"assets/clocks/{clockNumbers[int(choice)]}", "r")
+                lastReset = file.read()
+                file.close()
+                print(f"You last reset the clock {clockNumbers[int(choice)]} on {lastReset.split()[0]} at {lastReset.split()[1]}.")
+                print(f"You have not reset the clock for {timeBetween(str(datetime.now()).split('.')[0], lastReset)}.")
+                if domore() == False:
+                    return
+            #except ValueError: 
                 print("That is not an option! Please make sure you choose a number.")
 
+##################
+# Deleting Clock #
+##################
+
     elif action == "d":        
-        clockNumbers = {}
-        print("Available clocks:")
-        n = 0
-        for clock in clocks:
-            n += 1
-            print(f"[{n}] {clock}")
-            clockNumbers[n] = clock
         while True:
             choice = input("Choose a clock: ")
             try:
@@ -119,10 +125,16 @@ def start():
                     return
             except: 
                 print("That is not an option!")
-              
+
+##############
+# Start code #
+##############
+'''
 try:
     if not os.path.exists("assets/clocks"):
         os.makedirs("assets/clocks", exist_ok=True)
     start()
 except: 
     pass
+'''
+start()
