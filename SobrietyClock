@@ -1,0 +1,149 @@
+#!/usr/bin/python
+from datetime import datetime, timedelta
+import os, shutil, sys
+
+def timeBetween(t1, t2):
+    t1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S")
+    t2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S")
+    timeInSeconds = abs(int((t1-t2).total_seconds()))
+    return str(timedelta(seconds = timeInSeconds))
+    
+
+def resetClock(issue, time):
+    if time == "":
+        time=str(datetime.now()).split(".")[0]
+    file = open(f"assets/clocks/{issue}", "w")
+    file.write(time)
+    print(f"Wrote {time} for clock {issue}.")
+
+def loadClocks():
+    clocks = []
+    def initList():
+        if os.path.exists("assets/clocks/list"):
+            file = open("assets/clocks/list", "r")
+        else:
+            file = open("assets/clocks/list", "x")
+            initList()
+    initList()
+    file = open("assets/clocks/list", "r")
+    for line in file:
+        if line != "\n":
+            clocks.append(line.strip("\n"))
+    file.close()
+
+    return clocks
+def loadClocks():
+    clocks = []
+    for clock in os.listdir("assets/clocks"):
+        clocks.append(clock)
+    return clocks
+
+def domore():
+    rerun = input("Would you like to do anything else? (y/N) ")
+    if rerun.lower() == "y":
+        restart()
+    else:
+        return False
+
+def restart():
+    os.execv(sys.executable, ['python'] + sys.argv)
+
+def start():
+    action = input("Are you [r]esetting (or adding)/[d]eleting a clock or just [c]hecking progress? ")
+    actions = ["r", "d", "c"]
+    if action not in actions:
+        print("Invalid option. (not r/d/c)")
+        start()
+    clocks = os.listdir("assets/clocks")
+    if action == "r":
+        clockNumbers = {}
+        print("Available clocks:")
+        n = 0
+        for clock in clocks:
+            n += 1
+            print(f"[{n}] {clock}")
+            clockNumbers[n] = clock
+        n += 1
+        print(f"[{n}] New")
+        clockNumbers[n] = "New"
+        while True:
+            choice = input("Choose a clock: ")
+            try:
+                if int(choice) not in clockNumbers:
+                    print("That is not an option!")
+                else:
+                    print(f"Selected clock {choice}: {clockNumbers[int(choice)]}.")
+                    if clockNumbers[int(choice)] == "New":
+                        def nameClock():
+                            clockName = input("Enter a name for the new clock: ")
+                            try:
+                                file = open(f"assets/clocks/{clockName}", "x")
+                            except:
+                                print("A clock with that name already exists! Please choose another name.")
+                                nameClock()
+                            print(f"Clock with name {clockName} created.")
+                            file.close()
+                            return clockName
+                        clockName = nameClock()
+                        clockTime = input("What time do you want to reset this clock to? (default: now, format: YYYY-MM-DD HH:MM:SS) ")
+                        resetClock(clockName, clockTime)
+                    else:
+                        clockName = clockNumbers[(int(choice))]
+                        clockTime = input("What time do you want to reset this clock to? (default: now, format: YYYY-MM-DD HH:MM:SS) ")
+                        resetClock(clockName, clockTime)
+                    if domore() == False:
+                        return
+            except:
+                print("That is not an option! Please make sure you choose a number.")
+        if domore() == False:
+            return
+    elif action == "c":        
+        clockNumbers = {}
+        print("Available clocks:")
+        n = 0
+        for clock in clocks:
+            n += 1
+            print(f"[{n}] {clock}")
+            clockNumbers[n] = clock
+        while True:
+            choice = input("Choose a clock: ")
+            try:
+                if int(choice) not in clockNumbers:
+                    print("That is not an option!")
+                else:
+                    file = open(f"assets/clocks/{clockNumbers[int(choice)]}", "r")
+                    lastReset = file.read()
+                    file.close()
+                    print(f"You last reset the clock {clockNumbers[int(choice)]} on {lastReset.split()[0]} at {lastReset.split()[1]}.")
+                    print(f"You have not reset the clock for {timeBetween(str(datetime.now()).split('.')[0], lastReset)}.")
+                    if domore() == False:
+                        return
+            except: 
+                print("That is not an option! Please make sure you choose a number.")
+
+    elif action == "d":        
+        clockNumbers = {}
+        print("Available clocks:")
+        n = 0
+        for clock in clocks:
+            n += 1
+            print(f"[{n}] {clock}")
+            clockNumbers[n] = clock
+        while True:
+            choice = input("Choose a clock: ")
+            try:
+                if int(choice) not in clockNumbers:
+                    print("That is not an option!")
+                elif os.path.exists(f"assets/clocks/{clockNumbers[int(choice)]}"):
+                    os.remove(f"assets/clocks/{clockNumbers[int(choice)]}")
+                    print(f"Removed clock {clockNumbers[int(choice)]}.")
+                if domore() == False:
+                    return
+            except: 
+                print("That is not an option!")
+
+#domore()               
+try:
+    start()
+except: 
+    pass
