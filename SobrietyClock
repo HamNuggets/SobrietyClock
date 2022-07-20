@@ -2,6 +2,10 @@
 from datetime import datetime, timedelta
 import os, shutil, sys
 
+#############
+# Functions #
+#############
+
 def timeBetween(t1, t2):
 
     # Get the difference between the two dates in seconds.
@@ -13,13 +17,16 @@ def timeBetween(t1, t2):
     timechange = str(timedelta(seconds = timeInSeconds))
 
     # Convert the timestamp into "{years} years, {months} months, {weeks} weeks, {days} days, {hours}:{minutes}:{seconds}".
-    days = int(timechange.split()[0])
-    years = divmod(days, 365)
-    months = divmod(years[1], 30)
-    weeks = divmod(months[1], 7)
-    days = weeks[1]
-    hms = timechange.split()[2]
-    timestamp = str(f"{years[0]} years, {months[0]} months, {weeks[0]} weeks, {days} days, {hms}")
+    if len(timechange) > 8:
+        days = int(timechange.split()[0])
+        years = divmod(days, 365)
+        months = divmod(years[1], 30)
+        weeks = divmod(months[1], 7)
+        days = weeks[1]
+        hms = timechange.split()[2]
+        timestamp = str(f"{years[0]} years, {months[0]} months, {weeks[0]} weeks, {days} days, {hms}")
+    else:
+        return timechange
 
     # Make "0 {unit}" entries not appear.
     for unit in ["years", "months", "weeks", "days"]:
@@ -27,13 +34,19 @@ def timeBetween(t1, t2):
     return timestamp
     
 def resetClock(issue, time):
+
+    # Set the default value if no time was specified.
     if time == "":
         time=str(datetime.now()).split(".")[0]
+
+    # Write the specified or default time to assets/clocks/{issue}.
     file = open(f"assets/clocks/{issue}", "w")
     file.write(time)
     print(f"Wrote {time} for clock {issue}.")
 
 def domore():
+
+    # Ask the user if they would like to do anything else: Restart the code if they do, exit if they don't.
     rerun = input("Would you like to do anything else? (y/N) ")
     if rerun.lower() == "y":
         restart()
@@ -41,14 +54,24 @@ def domore():
         return False
 
 def restart():
+
+    # I don't really know how this works but it does so you know
     os.execv(sys.executable, ['python'] + sys.argv)
 
+#############
+# Main Loop #
+#############
+
 def start():
+
+    # Take the user's choice of action and store in memory.
     action = input("Are you [r]esetting (or adding)/[d]eleting a clock or just [c]hecking progress? ")
     actions = ["r", "d", "c"]
     if action not in actions:
         print("Invalid option. (not r/d/c)")
         start()
+        
+    # Initialise and list clocks.
     clocks = os.listdir("assets/clocks")
     clockNumbers = {}
     print("Available clocks:")
@@ -63,16 +86,23 @@ def start():
 ##########################
 
     if action == "r":
+
+        # Initialise a dummy clock to add the option to create a "New" clock.
         n += 1
         print(f"[{n}] New")
         clockNumbers[n] = "New"
+
+        # Let the user choose a clock.
         while True:
             choice = input("Choose a clock: ")
-            try:
+            #try:
+            if 1==1:
                 if int(choice) not in clockNumbers:
                     print("That is not an option!")
                 else:
                     print(f"Selected clock {choice}: {clockNumbers[int(choice)]}.")
+
+                    # If the user creates a new clock, go through the clock creation process.
                     if clockNumbers[int(choice)] == "New":
                         def nameClock():
                             clockName = input("Enter a name for the new clock: ")
@@ -85,16 +115,27 @@ def start():
                             file.close()
                             return clockName
                         clockName = nameClock()
-                        clockTime = input("What time do you want to reset this clock to? (default: now, format: YYYY-MM-DD HH:MM:SS) ")
-                        resetClock(clockName, clockTime)
+                        
+                    # If the user uses an existing clock, set the name of that clock to the same variable.
                     else:
                         clockName = clockNumbers[(int(choice))]
-                        clockTime = input("What time do you want to reset this clock to? (default: now, format: YYYY-MM-DD HH:MM:SS) ")
-                        resetClock(clockName, clockTime)
+
+                    # Have the user set a time for the clock to be set to.
+                    clockTime = input("What time do you want to reset this clock to? (default: now, format: YYYY-MM-DD HH:MM:SS) ")
+                    if clockNumbers[int(choice)] != "New":
+                        file = open(f"assets/clocks/{clockNumbers[int(choice)]}", "r")
+                        lastReset = file.read()
+                        file.close()
+                        print(f"You last reset the clock {clockNumbers[int(choice)]} on {lastReset.split()[0]} at {lastReset.split()[1]}.")
+                        print(f"You did not reset the clock for {timeBetween(str(datetime.now()).split('.')[0], lastReset)}.")   
+                    resetClock(clockName, clockTime)
                     if domore() == False:
                         return
-            except:
-                print("That is not an option! Please make sure you choose a number.")
+                        
+            # Prevent crashing in case the user does not select a number.            
+            #except ValueError:
+                #print("That is not an option! Please make sure you choose a number.")
+
         if domore() == False:
             return
 
@@ -102,47 +143,69 @@ def start():
 # Viewing Clock #
 #################
 
-    elif action == "c":        
+    elif action == "c":
+
+        # Let the user choose a clock.        
         while True:
             choice = input("Choose a clock: ")
-            #try:
-            if int(choice) not in clockNumbers:
-                print("That is not an option!")
-            else:
-                file = open(f"assets/clocks/{clockNumbers[int(choice)]}", "r")
-                lastReset = file.read()
-                file.close()
-                print(f"You last reset the clock {clockNumbers[int(choice)]} on {lastReset.split()[0]} at {lastReset.split()[1]}.")
-                print(f"You have not reset the clock for {timeBetween(str(datetime.now()).split('.')[0], lastReset)}.")
-                if domore() == False:
-                    return
-            #except ValueError: 
+            try:
+                if int(choice) not in clockNumbers:
+                    print("That is not an option!")
+
+                # Return information based on the contents of the clock's file.
+                else:
+                    file = open(f"assets/clocks/{clockNumbers[int(choice)]}", "r")
+                    lastReset = file.read()
+                    file.close()
+                    print(f"You last reset the clock {clockNumbers[int(choice)]} on {lastReset.split()[0]} at {lastReset.split()[1]}.")
+                    print(f"You have not reset the clock for {timeBetween(str(datetime.now()).split('.')[0], lastReset)}.")
+
+                    if domore() == False:
+                        return
+
+            # Prevent crashing in case the user does not select a number.
+            except ValueError: 
                 print("That is not an option! Please make sure you choose a number.")
 
 ##################
 # Deleting Clock #
 ##################
 
-    elif action == "d":        
+    elif action == "d":   
+
+        # Let the user choose a clock.     
         while True:
             choice = input("Choose a clock: ")
             try:
                 if int(choice) not in clockNumbers:
                     print("That is not an option!")
+
+                # If the specified clock exists (it always should) then delete the clock.
                 elif os.path.exists(f"assets/clocks/{clockNumbers[int(choice)]}"):
                     os.remove(f"assets/clocks/{clockNumbers[int(choice)]}")
                     print(f"Removed clock {clockNumbers[int(choice)]}.")
+
                 if domore() == False:
                     return
-            except: 
-                print("That is not an option!")
+
+            # Prevent crashing in case the user does not select a number.   
+            except ValueError: 
+                print("That is not an option! Please make sure you choose a number.")
 
 ##############
 # Start code #
 ##############
-try:
-    if not os.path.exists("assets/clocks"):
-        os.makedirs("assets/clocks", exist_ok=True)
-    start()
-except: 
-    pass
+
+#try:
+#
+#    # Create required directories if they do not exist.
+#    if not os.path.exists("assets/clocks"):
+#        os.makedirs("assets/clocks", exist_ok=True)
+#
+#    # Run the rest of the file.
+#    start()
+#except: 
+#    # "Be fucking quiet."
+#    pass
+
+start()
